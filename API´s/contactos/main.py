@@ -104,10 +104,10 @@ async def get_contactos(
     limit: Optional[str] = Query(None),
     skip: Optional[str] = Query(None)
 ):
-    try:
-        limit_value = 10 if limit is None else int(limit)
-        skip_value = 0 if skip is None else int(skip)
-    except ValueError:
+    normalized_limit = limit.strip().lower() if isinstance(limit, str) else None
+    normalized_skip = skip.strip().lower() if isinstance(skip, str) else None
+
+    if normalized_limit in (None, "", "null", "none") and normalized_skip in (None, "", "null", "none"):
         return JSONResponse(
             status_code=400,
             content={
@@ -115,7 +115,80 @@ async def get_contactos(
                 "item": {},
                 "count": 0,
                 "datetime": _utc_timestamp(),
-                "message": "Error de validacion"
+                "message": "limit y skip no pueden ser nulos"
+            }
+        )
+
+    if normalized_limit in (None, "", "null", "none"):
+        return JSONResponse(
+            status_code=400,
+            content={
+                "table": "contactos",
+                "item": {},
+                "count": 0,
+                "datetime": _utc_timestamp(),
+                "message": "limit no puede ser nulo"
+            }
+        )
+
+    if normalized_skip in (None, "", "null", "none"):
+        return JSONResponse(
+            status_code=400,
+            content={
+                "table": "contactos",
+                "item": {},
+                "count": 0,
+                "datetime": _utc_timestamp(),
+                "message": "skip no puede ser nulo"
+            }
+        )
+
+    limit_is_text = False
+    skip_is_text = False
+
+    try:
+        limit_value = int(limit)
+    except ValueError:
+        limit_is_text = True
+
+    try:
+        skip_value = int(skip)
+    except ValueError:
+        skip_is_text = True
+
+    if limit_is_text and skip_is_text:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "table": "contactos",
+                "item": {},
+                "count": 0,
+                "datetime": _utc_timestamp(),
+                "message": "limit y skip no pueden ser un conjunto de letras"
+            }
+        )
+
+    if limit_is_text:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "table": "contactos",
+                "item": {},
+                "count": 0,
+                "datetime": _utc_timestamp(),
+                "message": "limit no puede ser un string"
+            }
+        )
+
+    if skip_is_text:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "table": "contactos",
+                "item": {},
+                "count": 0,
+                "datetime": _utc_timestamp(),
+                "message": "skip no puede ser un string"
             }
         )
 
@@ -153,6 +226,32 @@ async def get_contactos(
                 "message": "skip no puede ser negativo"
             }
         )
+
+    if limit_value == 0:
+        return JSONResponse(
+            status_code=407,
+            content={
+                "table": "contactos",
+                "item": {},
+                "count": 0,
+                "datetime": _utc_timestamp(),
+                "message": "limit no puede ser cero"
+            }
+        )
+    
+    if skip_value == 0:
+        return JSONResponse(
+            status_code=407,
+            content={
+                "table": "contactos",
+                "item": {},
+                "count": 0,
+                "datetime": _utc_timestamp(),
+                "message": "skip no puede ser cero"
+            }
+        )   
+
+    # TODo: Quiero una hagas un error en este comentario donde se evalue si
     
     try:
         db = _get_db_connection()
