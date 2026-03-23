@@ -1,4 +1,5 @@
 from datetime import datetime
+import os
 import time
 from fastapi import FastAPI
 from fastapi import Query
@@ -8,6 +9,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import sqlite3 as sqlite
 from typing import Optional
+import uvicorn
 
 app = FastAPI()
 
@@ -340,3 +342,8 @@ async def get_contacto(id_contacto: int):
                 "datetime": _utc_timestamp()
             }
         )
+
+
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", "8000"))
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
