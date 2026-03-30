@@ -55,7 +55,7 @@ Insertar 100 registros
 |11| Response Type|application/json|
 |12| Status Code (error)|400, 401, 403, 404, 409, 422, 500, 501, 502, 503, 504|
 |13| Response Type(error) |applicaction/json|
-|14| Response (error)|{"detail":"Parámetros inválidos", "datetime":"timestamp"} / {"detail":"Direccion Incorrecta", "datetime":"timestamp"} / {"detail":"No puedes entrar Acceso prohibido", "datetime":"timestamp"} / {"detail":"No se encontraron contactos", "datetime":"timestamp"} / {"detail":"Conflicto: contacto duplicado", "datetime":"timestamp"} / {"detail":"Error de validación", "datetime":"timestamp"} / {"detail":"Error interno al consultar contactos", "datetime":"timestamp"} / {"detail":"Error de comunicación con servidor externo", "datetime":"timestamp"} / {"detail":"Servicio no disponible", "datetime":"timestamp"} / {"detail":"Tiempo de espera agotado", "datetime":"timestamp"}|
+|14| Response (error)|{"detail":"Parámetros inválidos", "datetime":"timestamp"} / {"detail":"Direccion Incorrecta", "datetime":"timestamp"} / {"detail":"No puedes entrar Acceso prohibido", "datetime":"timestamp"} / {"detail":"No se encontraron contactos", "datetime":"timestamp"} / {"detail":"Conflicto: contacto duplicado", "datetime":"timestamp"}|
 |15| cURL|curl -X GET http://127.0.0.1:8000/|
 
 
