@@ -22,6 +22,12 @@ class ContactoCreate(BaseModel):
     email: str
 
 
+class ContactoUpdate(BaseModel):
+    nombre: str
+    telefono: str
+    email: str
+
+
 def _utc_timestamp() -> str:
     return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -70,6 +76,9 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             message = "Campos vacios"
             status_code = 401
         error_type = error.get("type") or ""
+        if "id_contacto" in loc and ("int_parsing" in error_type or "type_error.integer" in error_type):
+            message = "id no puede ser un string"
+            status_code = 400
         if any(param in loc for param in ("limit", "skip", "id_contacto")) and (
             error_type == "value_error.number.not_ge"
             or "greater_than_equal" in error_type
@@ -247,6 +256,18 @@ async def create_contacto(contacto: ContactoCreate):
             }
         )
 
+    if "@" not in contacto.email.strip():
+        return JSONResponse(
+            status_code=400,
+            content={
+                "table": "contactos",
+                "item": {},
+                "count": 0,
+                "datetime": _utc_timestamp(),
+                "message": "El email debe contener @"
+            }
+        )
+
     try:
         db = _get_db_connection()
         try:
@@ -321,7 +342,7 @@ async def get_contacto(id_contacto: int):
                     "item": {},
                     "count": 0,
                     "datetime": _utc_timestamp(),
-                    "message": "Contacto no encontrado"
+                    "message": "este contacto no existe"
                 }
             )
 
@@ -339,6 +360,235 @@ async def get_contacto(id_contacto: int):
             status_code=400,
             content={
                 "detail": "Error al buscar el registro",
+                "datetime": _utc_timestamp()
+            }
+        )
+
+
+@app.put(
+    "/v1/contacto",
+    status_code=202,
+    summary="Endpoint para actualizar un contacto",
+    description="Endpoint para actualizar un contacto por id_contacto."
+)
+async def update_contacto(id_contacto: int = Query(...), contacto: ContactoUpdate = None):
+    if id_contacto < 0:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "table": "contactos",
+                "item": {},
+                "count": 0,
+                "datetime": _utc_timestamp(),
+                "message": "El id no puede ser negativo"
+            }
+        )
+
+    if contacto is None:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "table": "contactos",
+                "item": {},
+                "count": 0,
+                "datetime": _utc_timestamp(),
+                "message": "Error de validacion"
+            }
+        )
+
+    if not contacto.nombre.strip() or not contacto.telefono.strip() or not contacto.email.strip():
+        return JSONResponse(
+            status_code=401,
+            content={
+                "table": "contactos",
+                "item": {},
+                "count": 0,
+                "datetime": _utc_timestamp(),
+                "message": "Campos vacios"
+            }
+        )
+
+    if "@" not in contacto.email.strip():
+        return JSONResponse(
+            status_code=400,
+            content={
+                "table": "contactos",
+                "item": {},
+                "count": 0,
+                "datetime": _utc_timestamp(),
+                "message": "El email debe contener @"
+            }
+        )
+
+    try:
+        db = _get_db_connection()
+        try:
+            cursor = db.cursor()
+            cursor.execute(
+                "SELECT * FROM contactos WHERE id_contacto = ?",
+                (id_contacto,)
+            )
+            existente = cursor.fetchone()
+
+            if existente is None:
+                return JSONResponse(
+                    status_code=404,
+                    content={
+                        "table": "contactos",
+                        "item": {},
+                        "count": 0,
+                        "datetime": _utc_timestamp(),
+                        "message": "este contacto no existe"
+                    }
+                )
+
+            cursor.execute(
+                """
+                UPDATE contactos
+                SET nombre = ?, email = ?, telefono = ?
+                WHERE id_contacto = ?
+                """,
+                (
+                    contacto.nombre.strip(),
+                    contacto.email.strip(),
+                    contacto.telefono.strip(),
+                    id_contacto,
+                )
+            )
+            db.commit()
+        finally:
+            db.close()
+
+        return JSONResponse(
+            status_code=202,
+            content={
+                "table": "contactos",
+                "item": {
+                    "id_contacto": id_contacto,
+                    "nombre": contacto.nombre.strip(),
+                    "email": contacto.email.strip(),
+                    "telefono": contacto.telefono.strip(),
+                },
+                "count": 1,
+                "datetime": _utc_timestamp(),
+                "message": "Contacto actualizado exitosamente"
+            }
+        )
+    except Exception as e:
+        print(f"Error al actualizar en la base de datos: {e.args}")
+        return JSONResponse(
+            status_code=400,
+            content={
+                "detail": "Error al actualizar el registro",
+                "datetime": _utc_timestamp()
+            }
+        )
+
+
+@app.delete(
+    "/v1/contacto",
+    status_code=202,
+    summary="Endpoint para eliminar un contacto",
+    description="Endpoint para eliminar un contacto por id_contacto."
+)
+async def delete_contacto(id_contacto: Optional[str] = Query(None)):
+    if id_contacto is None:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "table": "contactos",
+                "item": {},
+                "count": 0,
+                "datetime": _utc_timestamp(),
+                "message": "el campo no puede estar vacio"
+            }
+        )
+
+    id_contacto_str = str(id_contacto).strip()
+    if id_contacto_str == "":
+        return JSONResponse(
+            status_code=400,
+            content={
+                "table": "contactos",
+                "item": {},
+                "count": 0,
+                "datetime": _utc_timestamp(),
+                "message": "el campo no puede estar vacio"
+            }
+        )
+
+    try:
+        id_contacto_value = int(id_contacto_str)
+    except ValueError:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "table": "contactos",
+                "item": {},
+                "count": 0,
+                "datetime": _utc_timestamp(),
+                "message": "id no puede ser un string"
+            }
+        )
+
+    if id_contacto_value < 0:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "table": "contactos",
+                "item": {},
+                "count": 0,
+                "datetime": _utc_timestamp(),
+                "message": "El id no puede ser negativo"
+            }
+        )
+
+    try:
+        db = _get_db_connection()
+        try:
+            cursor = db.cursor()
+            cursor.execute(
+                "SELECT * FROM contactos WHERE id_contacto = ?",
+                (id_contacto_value,)
+            )
+            contacto = cursor.fetchone()
+
+            if contacto is None:
+                return JSONResponse(
+                    status_code=404,
+                    content={
+                        "table": "contactos",
+                        "item": {},
+                        "count": 0,
+                        "datetime": _utc_timestamp(),
+                        "message": "este contacto no existe"
+                    }
+                )
+
+            cursor.execute(
+                "DELETE FROM contactos WHERE id_contacto = ?",
+                (id_contacto_value,)
+            )
+            db.commit()
+        finally:
+            db.close()
+
+        return JSONResponse(
+            status_code=202,
+            content={
+                "table": "contactos",
+                "item": dict(contacto),
+                "count": 1,
+                "datetime": _utc_timestamp(),
+                "message": "Contacto eliminado exitosamente"
+            }
+        )
+    except Exception as e:
+        print(f"Error al eliminar en la base de datos: {e.args}")
+        return JSONResponse(
+            status_code=400,
+            content={
+                "detail": "Error al eliminar el registro",
                 "datetime": _utc_timestamp()
             }
         )

@@ -76,7 +76,7 @@ Insertar 100 registros
 |11| Response Type|application/json|
 |12| Status Code (error)|400|
 |13| Response Type(error) |application/json|
-|14| Response (error)|{"table": "contactos","item": {},"count": 0, "datetime": timestamp, "message": "Contacto no encontrado"} / {"detail":"Error al buscar el registro", "datetime":"timestamp"}|
+|14| Response (error)|{"table": "contactos","item": {},"count": 0, "datetime": timestamp, "message": "este contacto no existe"} / {"detail":"Error al buscar el registro", "datetime":"timestamp"}|
 |15| cURL|curl -X GET http://127.0.0.1:8000/v1/contactos/3|  
 
 
@@ -99,4 +99,48 @@ Insertar 100 registros
 |13| Response Type(error) |application/json|
 |14| Response (error)|{"detail":"Error en la base de datos", "datetime":"timestamp"} / {"message":"Campos vacios", "datetime":"timestamp"}|
 |15| cURL|curl -X POST http://127.0.0.1:8000/v1/contactos -H "Content-Type: application/json" -d '{"nombre":"Liz", "email":"liz@email.com", "telefono":"1234567890"}'|
+
+6. Modificar contacto  
+
+| No.      | Propiedad | Detalle |
+|----------|-----------|:-------:|
+|1| Description|Endpoint para modificar un contacto por id|
+|2| Summary|Actualiza nombre, email y telefono de un contacto|
+|3| Version|v1|
+|4| Method|PUT|
+|5| Endpoint|/v1/contacto|
+|6| Authentication|NA|
+|7| Query param|id_contacto:int|
+|8| Path param|NA|
+|9| Data|{"nombre": str, "email": str, "telefono": str}|
+|10| Status code|202|
+|11| Response type|application/json|
+|12| Response|{"table":"contactos", "item": {"id_contacto":int, "nombre": str, "email": str, "telefono": str}, "count":1, "datetime": timestamp, "message":"Contacto actualizado exitosamente"}|
+|13| Status code (error)|400, 401, 404|
+|14| Response type (error)|application/json|
+|15| Response (error)|{"table":"contactos", "item":{}, "count":0, "datetime": timestamp, "message":"El id no puede ser negativo"} / {"table":"contactos", "item":{}, "count":0, "datetime": timestamp, "message":"Campos vacios"} / {"table":"contactos", "item":{}, "count":0, "datetime": timestamp, "message":"El email debe contener @"} / {"table":"contactos", "item":{}, "count":0, "datetime": timestamp, "message":"este contacto no existe"} / {"detail":"Error al actualizar el registro", "datetime":"timestamp"}|
+|16| cURL|curl -X PUT "http://127.0.0.1:8000/v1/contacto?id_contacto=3" -H "Content-Type: application/json" -d '{"nombre":"Liz Actualizada", "email":"liz.actualizada@email.com", "telefono":"1234567890"}'|
+|17| Table|contactos|
+
+7. Eliminar contacto  
+
+| No.      | Propiedad | Detalle |
+|----------|-----------|:-------:|
+|1| Description|Endpoint para eliminar un contacto por id|
+|2| Summary|Elimina un contacto existente de la tabla contactos|
+|3| Version|v1|
+|4| Method|DELETE|
+|5| Endpoint|/v1/contacto|
+|6| Authentication|NA|
+|7| Query param|id_contacto:int|
+|8| Path param|NA|
+|9| Data|NA|
+|10| Status code|202|
+|11| Response type|application/json|
+|12| Response|{"table":"contactos", "item": {"id_contacto":int, "nombre": str, "email": str, "telefono": str}, "count":1, "datetime": timestamp, "message":"Contacto eliminado exitosamente"}|
+|13| Status code (error)|400, 404|
+|14| Response type (error)|application/json|
+|15| Response (error)|{"table":"contactos", "item":{}, "count":0, "datetime": timestamp, "message":"el campo no puede estar vacio"} / {"table":"contactos", "item":{}, "count":0, "datetime": timestamp, "message":"El id no puede ser negativo"} / {"table":"contactos", "item":{}, "count":0, "datetime": timestamp, "message":"este contacto no existe"} / {"detail":"Error al eliminar el registro", "datetime":"timestamp"}|
+|16| cURL|curl -X DELETE "http://127.0.0.1:8000/v1/contacto?id_contacto=3"|
+|17| Table|contactos|
 
